@@ -1,0 +1,65 @@
+close all
+clc
+clear all
+
+% Path to save file
+dir_ = 'D:\PhD_Research\Code_matlab\Sphere_Scattering\Data\02\';
+
+% Generate configs of data
+% num_data = 100;
+% eps_min = 1;    eps_max = 20;
+% mu_min = 1;     mu_max = 10;
+% ra_min = 0.01;   ra_max = 2;
+% fn_min = 0.1;   fn_max = 3;
+% 
+% input_config = config_generator(num_data, ...
+%                                 eps_min, eps_max, ...
+%                                 mu_min, mu_max, ...
+%                                 ra_min, ra_max, ...
+%                                 fn_min, fn_max);
+% 
+% csvwrite(strcat(dir_, 'data_config.csv'), input_config);
+
+% input_config = [10, 1, 0.1, 0.5; ...
+%                 10, 1, 0.1, 2.8; ...
+%                  5, 2, 0.5, 0.5];
+% num_data = length(input_config(:, 1));
+
+dir2 = strcat(dir_, 'data_config_02.csv');
+input_config_ = readtable(dir2);
+input_config = table2array(in);
+num_data = length(input_config(:, 1));
+
+% Measuring & Plotting contour using each config
+tic
+figC = figure;
+drawnow
+for ind = 1:num_data
+
+    [E_te, E_tm] = spherical_scattering(input_config(ind, 1), ...
+                              input_config(ind, 2), ...
+                              input_config(ind, 3), ...
+                              input_config(ind, 4));
+
+    Es = E_te;
+    Es(:, 3:5) = E_te(:, 3:5) + E_tm(:, 3:5);
+    normEs = real(Es(:, 3)).^2 + imag(Es(:, 3)).^2 ...
+            + real(Es(:, 4)).^2 + imag(Es(:, 4)).^2 ...
+            + real(Es(:, 5)).^2 + imag(Es(:, 5)).^2;
+    
+    num_theta = length(unique(Es(:, 1)));
+    num_phi = length(unique(Es(:, 2)));
+        
+    X = reshape(Es(:, 1), num_phi, num_theta);
+    Y = reshape(Es(:, 2), num_phi, num_theta);
+    Z = reshape(normEs, num_phi, num_theta);
+
+    contour(X, Y, Z, 50);
+    xlabel('\theta');
+    ylabel('\phi');
+    drawnow
+    dir = strcat(dir_, num2str(ind));
+    saveas(figC, dir, 'jpg');
+end
+close(figC)
+toc
